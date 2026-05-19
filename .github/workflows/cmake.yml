@@ -78,9 +78,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build valgrind cppcheck jq \
-                                  libc++-18-dev libc++abi-18-dev \
-                                  libsfml-dev xvfb
+          sudo apt-get install -y ninja-build valgrind cppcheck jq libc++-18-dev libc++abi-18-dev libsfml-dev xvfb
 
       - name: Install Windows SFML for MSVC (vcpkg)
         if: matrix.os == 'windows-2022' && !matrix.is_mingw
@@ -110,13 +108,8 @@ jobs:
       - name: Build & Install (Standard: Linux & Windows MSVC)
         if: "!matrix.is_mingw"
         run: |
-          cmake -S . -B "${BUILD_DIR}" \
-            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DCMAKE_INSTALL_PREFIX=./artifacts \
-            ${{ matrix.cmake_flags }} \
-            ${{ matrix.cmake_generator && format('-G "{0}"', matrix.cmake_generator) || '' }}
-          
-          cmake --build "${BUILD_DIR}" --config ${BUILD_TYPE} -j $(nproc 2>/dev/null || sysctl -n hw.ncpu || echo 2)
+          cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=./artifacts ${{ matrix.cmake_flags }} ${{ matrix.cmake_generator && format('-G \"{0}\"', matrix.cmake_generator) || '' }}
+          cmake --build "${BUILD_DIR}" --config ${BUILD_TYPE} -j 2
           cmake --install "${BUILD_DIR}" --config ${BUILD_TYPE}
 
       - name: Memory Check (Valgrind on GCC)
@@ -132,8 +125,7 @@ jobs:
       - name: Static Analysis (Cppcheck)
         if: runner.os == 'Linux'
         run: |
-          cppcheck --enable=all --project="${BUILD_DIR}"/compile_commands.json \
-            --suppress=missingIncludeSystem --error-exitcode=1
+          cppcheck --enable=all --project="${BUILD_DIR}"/compile_commands.json --suppress=missingIncludeSystem --error-exitcode=1
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
