@@ -15,7 +15,7 @@ else()
     set(WARNINGS_AS_ERRORS ON)
 endif()
 
-find_package(SFML COMPONENTS graphics window system REQUIRED)
+find_package(SFML COMPONENTS sfml-graphics sfml-window sfml-system REQUIRED)
 
 # Main executable
 add_executable(${PROJECT_NAME}
@@ -28,9 +28,8 @@ add_executable(${PROJECT_NAME}
     Menu.cpp
     Presets.cpp
     SizeFilters.cpp
-    FilterFactory.cpp
-    
     )
+
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics sfml-window sfml-system)
 
 if(GITHUB_ACTIONS)
