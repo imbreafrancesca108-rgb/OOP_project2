@@ -108,7 +108,10 @@ jobs:
       - name: Build & Install (Standard: Linux & Windows MSVC)
         if: "!matrix.is_mingw"
         run: |
-          cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=./artifacts ${{ matrix.cmake_flags }} ${{ matrix.cmake_generator && format('-G \"{0}\"', matrix.cmake_generator) || '' }}
+          cmake -S . -B "${BUILD_DIR}" \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DCMAKE_INSTALL_PREFIX=./artifacts \
+            ${{ matrix.cmake_flags }}
           cmake --build "${BUILD_DIR}" --config ${BUILD_TYPE} -j 2
           cmake --install "${BUILD_DIR}" --config ${BUILD_TYPE}
 
