@@ -15,7 +15,7 @@ else()
     set(WARNINGS_AS_ERRORS ON)
 endif()
 
-find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+find_package(SFML COMPONENTS graphics window system REQUIRED)
 
 # Main executable
 add_executable(${PROJECT_NAME}
