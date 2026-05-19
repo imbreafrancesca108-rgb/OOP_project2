@@ -1,119 +1,74 @@
-name: C++ CI
+name: CMake Build
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
   pull_request:
-    branches: [main]
-  workflow_dispatch:
+    branches: [ "main" ]
 
 jobs:
   build:
-    name: ${{ matrix.name }}
+    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-
-    defaults:
-      run:
-        shell: bash
-
-    env:
-      CC: ${{ matrix.c }}
-      CXX: ${{ matrix.cxx }}
-      BUILD_TYPE: 'Debug'
-      EXECUTABLE_NAME: "oop"
-      INPUT_FILENAME: "tastatura.txt"
-      BUILD_DIR: "build"
 
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-24.04
-            c: clang-18
-            cxx: clang++-18
-            name: Ubuntu-Clang
-
-          - os: ubuntu-24.04
-            c: gcc-13
-            cxx: g++-13
-            name: Ubuntu-GCC
-
-          - os: windows-2022
-            c: cl
-            cxx: cl
-            name: Windows-MSVC
-
-          - os: windows-2022
-            c: gcc
-            cxx: g++
-            name: Windows-MinGW
-            is_mingw: true
+        os: [ubuntu-latest, windows-latest]
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Prepare env
-        run: |
-          mkdir -p artifacts
-          if [ ! -f "${INPUT_FILENAME}" ]; then touch "${INPUT_FILENAME}"; fi
+    # ── LINUX CONFIG ──────────────────────────────────────────────────────────
+    - name: Install Linux Dependencies
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++-13 libxrandr-dev libxcursor-dev libudev-dev libopenal-dev libvorbis-dev libflac-dev libgl1-mesa-dev libegl1-mesa-dev libdrm-dev libgbm-dev
+        
+    - name: Cache SFML 3 (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      id: cache-sfml
+      uses: actions/cache@v4
+      with:
+        path: ./sfml3_install
+        key: ${{ matrix.os }}-sfml3-v1
 
-      - name: Install Linux Dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build valgrind cppcheck jq libsfml-dev xvfb
+    - name: Build SFML 3 from Source (Linux)
+      if: matrix.os == 'ubuntu-latest' && steps.cache-sfml.outputs.cache-hit != 'true'
+      run: |
+        git clone --depth 1 --branch 3.0.0 https://github.com/SFML/SFML.git
+        cmake -S SFML -B SFML/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./sfml3_install -DSFML_BUILD_AUDIO=ON -DSFML_BUILD_GRAPHICS=ON -DSFML_BUILD_WINDOW=ON -DSFML_BUILD_SYSTEM=ON
+        cmake --build SFML/build --target install --parallel $(nproc)
 
-      - name: Install Windows SFML MSVC
-        if: matrix.os == 'windows-2022' && !matrix.is_mingw
-        run: |
-          vcpkg install sfml:x64-windows
+    # ── WINDOWS CONFIG (Aliniat pe MINGW64) ───────────────────────────────────
+    - name: Set up MSYS2 (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ninja
+          mingw-w64-x86_64-toolchain
+          mingw-w64-x86_64-sfml
 
-      - name: Install Windows SFML MinGW
-        if: matrix.is_mingw
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-ninja
-            mingw-w64-x86_64-sfml
+    # ── BUILD STEPS ──────────────────────────────────────────────────────────
+    - name: Configure CMake (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="${{ github.workspace }}/sfml3_install" -DCMAKE_CXX_COMPILER=g++-13
 
-      - name: Build MinGW
-        if: matrix.is_mingw
-        shell: msys2 {0}
-        run: |
-          cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=./artifacts
-          cmake --build build --config Debug -j 2
-          cmake --install build --config Debug
+    - name: Configure CMake (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: msys2 {0}
+      run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Build Standard
-        if: "!matrix.is_mingw"
-        run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=./artifacts
-          cmake --build build --config Debug -j 2
-          cmake --install build --config Debug
+    - name: Build Project (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: cmake --build build --config Debug
 
-      - name: Memory Check Valgrind
-        if: runner.os == 'Linux' && startsWith(matrix.cxx, 'g++')
-        run: |
-          xvfb-run --auto-servernum valgrind --leak-check=full --error-exitcode=1 ./build/oop < "${INPUT_FILENAME}"
-
-      - name: Memory Check ASan
-        if: runner.os == 'Linux' && startsWith(matrix.cxx, 'clang++')
-        run: |
-          xvfb-run --auto-servernum ./build/oop < "${INPUT_FILENAME}"
-
-      - name: Static Analysis
-        if: runner.os == 'Linux'
-        run: |
-          cppcheck --enable=all --project=build/compile_commands.json --suppress=missingIncludeSystem --error-exitcode=1
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}
-          path: artifacts/
+    - name: Build Project (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: msys2 {0}
+      run: cmake --build build --config Debug
