@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Treat warnings as errors by default
 if(DEFINED WARNINGS_AS_ERRORS)
     # already defined
 elseif(DEFINED ENV{WARNINGS_AS_ERRORS})
@@ -15,19 +14,20 @@ else()
     set(WARNINGS_AS_ERRORS ON)
 endif()
 
-# ── STRATEGIE UNIVERSALĂ DETECTARE SFML (v2 sau v3) ───────────────────────────
-# Pasul 1: Încercăm mai întâi stilul SFML 2 (clasic, fără prefix)
-find_package(SFML COMPONENTS graphics window system QUIET)
+# ── DETECTARE MODERNA SFML (v2 sau v3) ───────────────────────────────────────
+# Toate versiunile acceptă componentele scrise cu litere mici
+find_package(SFML COMPONENTS graphics window system REQUIRED)
 
-if(SFML_FOUND)
-    message("S-a detectat SFML standard (Sintaxa clasica)")
-    # Pe SFML 2, țintele se numesc direct sfml-graphics, sfml-window, sfml-system
+# Verificăm dacă s-au generat țintele moderne de SFML 3 (SFML::graphics)
+if(TARGET SFML::graphics)
+    message("S-a detectat SFML 3 (Sintaxa moderna cu namespace)")
+    set(SFML_LIBRARIES SFML::graphics SFML::window SFML::system)
+elseif(TARGET sfml-graphics)
+    message("S-a detectat SFML 2 (Tinte clasice)")
     set(SFML_LIBRARIES sfml-graphics sfml-window sfml-system)
 else()
-    # Pasul 2: Dacă nu a găsit, înseamnă că MSYS2 a instalat SFML 3 (care cere prefix)
-    message("SFML clasic nu a fost gasit. Se incearca sintaxa noua de SFML 3...")
-    find_package(SFML COMPONENTS sfml-graphics sfml-window sfml-system REQUIRED)
-    set(SFML_LIBRARIES sfml-graphics sfml-window sfml-system)
+    # Fallback pentru unele variante de instalare vechi
+    set(SFML_LIBRARIES ${SFML_LIBRARIES}) 
 endif()
 
 # Main executable
@@ -41,10 +41,9 @@ add_executable(${PROJECT_NAME}
     Menu.cpp
     Presets.cpp
     SizeFilters.cpp
-    )
+)
 
-# ── LINKARE LIBRĂRII SFML ───────────────────────────────────────────────────────
-# Folosește variabila setată automat mai sus, indiferent de ce versiune s-a găsit
+# Linkare biblioteci
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SFML_LIBRARIES})
 
 if(GITHUB_ACTIONS)
@@ -89,5 +88,4 @@ elseif(UNIX)
     endif()
 endif()
 
-# Regula de instalare
 install(TARGETS ${PROJECT_NAME} DESTINATION .)
