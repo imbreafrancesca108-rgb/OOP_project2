@@ -3,25 +3,15 @@ name: C++ CI
 on:
   push:
     branches: [main]
-    tags: ['*']
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      build_type:
-        description: Build type
-        required: false
-        default: 'Debug'
-        type: choice
-        options: [Debug, Release, RelWithDebInfo, MinSizeRel]
 
 jobs:
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
-    permissions:
-      contents: write
 
     defaults:
       run:
@@ -30,11 +20,10 @@ jobs:
     env:
       CC: ${{ matrix.c }}
       CXX: ${{ matrix.cxx }}
-      BUILD_TYPE: ${{ github.event.inputs.build_type || 'Debug' }}
+      BUILD_TYPE: 'Debug'
       EXECUTABLE_NAME: "oop"
       INPUT_FILENAME: "tastatura.txt"
       BUILD_DIR: "build"
-      VCPKG_BINARY_SOURCES: "clear;nuget,GitHub,readwrite"
 
     strategy:
       fail-fast: false
@@ -43,26 +32,22 @@ jobs:
           - os: ubuntu-24.04
             c: clang-18
             cxx: clang++-18
-            name: Ubuntu 24.04 Clang 18
-            cmake_flags: -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            name: Ubuntu-Clang
 
           - os: ubuntu-24.04
             c: gcc-13
             cxx: g++-13
-            name: Ubuntu 24.04 GCC 13
-            cmake_flags: -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            name: Ubuntu-GCC
 
           - os: windows-2022
             c: cl
             cxx: cl
-            name: Windows 2022 MSVC
-            cmake_flags: -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+            name: Windows-MSVC
 
           - os: windows-2022
             c: gcc
             cxx: g++
-            name: Windows 2022 MinGW
-            cmake_generator: Ninja
+            name: Windows-MinGW
             is_mingw: true
 
     steps:
@@ -74,18 +59,18 @@ jobs:
           mkdir -p artifacts
           if [ ! -f "${INPUT_FILENAME}" ]; then touch "${INPUT_FILENAME}"; fi
 
-      - name: Install Linux Dependencies (SFML & Virtual Display)
+      - name: Install Linux Dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build valgrind cppcheck jq libc++-18-dev libc++abi-18-dev libsfml-dev xvfb
+          sudo apt-get install -y ninja-build valgrind cppcheck jq libsfml-dev xvfb
 
-      - name: Install Windows SFML for MSVC (vcpkg)
+      - name: Install Windows SFML MSVC
         if: matrix.os == 'windows-2022' && !matrix.is_mingw
         run: |
           vcpkg install sfml:x64-windows
 
-      - name: Install Windows SFML for MinGW (MSYS2)
+      - name: Install Windows SFML MinGW
         if: matrix.is_mingw
         uses: msys2/setup-msys2@v2
         with:
@@ -97,42 +82,38 @@ jobs:
             mingw-w64-x86_64-ninja
             mingw-w64-x86_64-sfml
 
-      - name: Build & Install (Windows MinGW)
+      - name: Build MinGW
         if: matrix.is_mingw
         shell: msys2 {0}
         run: |
-          cmake -S . -B "${BUILD_DIR}" -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=./artifacts
-          cmake --build "${BUILD_DIR}" --config ${BUILD_TYPE} -j 2
-          cmake --install "${BUILD_DIR}" --config ${BUILD_TYPE}
+          cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=./artifacts
+          cmake --build build --config Debug -j 2
+          cmake --install build --config Debug
 
-      - name: Build & Install (Standard: Linux & Windows MSVC)
+      - name: Build Standard
         if: "!matrix.is_mingw"
         run: |
-          cmake -S . -B "${BUILD_DIR}" \
-            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DCMAKE_INSTALL_PREFIX=./artifacts \
-            ${{ matrix.cmake_flags }}
-          cmake --build "${BUILD_DIR}" --config ${BUILD_TYPE} -j 2
-          cmake --install "${BUILD_DIR}" --config ${BUILD_TYPE}
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=./artifacts
+          cmake --build build --config Debug -j 2
+          cmake --install build --config Debug
 
-      - name: Memory Check (Valgrind on GCC)
+      - name: Memory Check Valgrind
         if: runner.os == 'Linux' && startsWith(matrix.cxx, 'g++')
         run: |
-          xvfb-run --auto-servernum valgrind --leak-check=full --error-exitcode=1 ./${BUILD_DIR}/${EXECUTABLE_NAME} < "${INPUT_FILENAME}"
+          xvfb-run --auto-servernum valgrind --leak-check=full --error-exitcode=1 ./build/oop < "${INPUT_FILENAME}"
 
-      - name: Memory Check (ASan on Clang)
+      - name: Memory Check ASan
         if: runner.os == 'Linux' && startsWith(matrix.cxx, 'clang++')
         run: |
-          xvfb-run --auto-servernum ./${BUILD_DIR}/${EXECUTABLE_NAME} < "${INPUT_FILENAME}"
+          xvfb-run --auto-servernum ./build/oop < "${INPUT_FILENAME}"
 
-      - name: Static Analysis (Cppcheck)
+      - name: Static Analysis
         if: runner.os == 'Linux'
         run: |
-          cppcheck --enable=all --project="${BUILD_DIR}"/compile_commands.json --suppress=missingIncludeSystem --error-exitcode=1
+          cppcheck --enable=all --project=build/compile_commands.json --suppress=missingIncludeSystem --error-exitcode=1
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}_${{ matrix.name }}_${{ matrix.cxx }}
+          name: ${{ matrix.name }}
           path: artifacts/
-          retention-days: 5
