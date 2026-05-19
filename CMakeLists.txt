@@ -15,7 +15,20 @@ else()
     set(WARNINGS_AS_ERRORS ON)
 endif()
 
-find_package(SFML COMPONENTS sfml-graphics sfml-window sfml-system REQUIRED)
+# ── STRATEGIE UNIVERSALĂ DETECTARE SFML (v2 sau v3) ───────────────────────────
+# Pasul 1: Încercăm mai întâi stilul SFML 2 (clasic, fără prefix)
+find_package(SFML COMPONENTS graphics window system QUIET)
+
+if(SFML_FOUND)
+    message("S-a detectat SFML standard (Sintaxa clasica)")
+    # Pe SFML 2, țintele se numesc direct sfml-graphics, sfml-window, sfml-system
+    set(SFML_LIBRARIES sfml-graphics sfml-window sfml-system)
+else()
+    # Pasul 2: Dacă nu a găsit, înseamnă că MSYS2 a instalat SFML 3 (care cere prefix)
+    message("SFML clasic nu a fost gasit. Se incearca sintaxa noua de SFML 3...")
+    find_package(SFML COMPONENTS sfml-graphics sfml-window sfml-system REQUIRED)
+    set(SFML_LIBRARIES sfml-graphics sfml-window sfml-system)
+endif()
 
 # Main executable
 add_executable(${PROJECT_NAME}
@@ -30,7 +43,9 @@ add_executable(${PROJECT_NAME}
     SizeFilters.cpp
     )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics sfml-window sfml-system)
+# ── LINKARE LIBRĂRII SFML ───────────────────────────────────────────────────────
+# Folosește variabila setată automat mai sus, indiferent de ce versiune s-a găsit
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SFML_LIBRARIES})
 
 if(GITHUB_ACTIONS)
     message("NOTE: GITHUB_ACTIONS defined")
@@ -63,10 +78,8 @@ elseif(APPLE)
     target_link_options(${PROJECT_NAME} PRIVATE "$<${debug_mode}:-fsanitize=address,undefined>")
 elseif(UNIX)
     if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-        # We leave GCC "clean" so Valgrind can run without shadow memory conflicts
         message("GCC detected: Sanitizers disabled to allow Valgrind usage.")
     elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        # Enable ASan for Clang 14 and all newer versions (15, 16, 17, 18, etc.)
         if("${CMAKE_CXX_COMPILER_VERSION}" VERSION_GREATER_EQUAL "14.0")
             target_compile_options(${PROJECT_NAME} PRIVATE "$<${debug_mode}:-fsanitize=address,undefined>")
             target_link_options(${PROJECT_NAME} PRIVATE "$<${debug_mode}:-fsanitize=address,undefined>")
@@ -76,4 +89,5 @@ elseif(UNIX)
     endif()
 endif()
 
+# Regula de instalare
 install(TARGETS ${PROJECT_NAME} DESTINATION .)
