@@ -42,10 +42,14 @@ void Menu::refreshTexture(sf::Texture& tex,sf::Sprite& spr,
     std::cerr<<"Loading pixel data from the image has failed. Try again!\n";
     
     /// we set the frame 
+    tex.setSmooth(false);
     spr.setTexture(tex, true);
 
     /// we calculate the scale to match the canvas to not deform the photo
     float scale=std::min(static_cast<float>(canvas.x)/w,static_cast<float>(canvas.y)/h);
+    if(activeFilter=="Resize")
+    {scale=scale*(activeAmount/100.0f);
+    }
     spr.setScale({scale, scale});
     ///center the photo
     spr.setPosition({origin.x + (static_cast<float>(canvas.x)-w*scale)/2.f,origin.y+(static_cast<float>(canvas.y)-h*scale)/2.f});
@@ -69,7 +73,7 @@ bool Menu::drawButton(sf::RenderWindow& win, sf::Font& font, const std::string& 
     win.draw(shape); /// drawing the rectangle in our window
     
     /// shaping the text on our button
-    sf::Text txt(font, label, 12);
+    sf::Text txt(font, label, 15);
     txt.setFillColor(sf::Color::White);
     /// position text in the center
     txt.setOrigin(txt.getLocalBounds().getCenter());
@@ -86,13 +90,13 @@ bool Menu::drawHeader(sf::RenderWindow& win, sf::Font& font, const std::string& 
 
     sf::RectangleShape shape({w, 38.f});
     shape.setPosition({x, y});
-    shape.setFillColor(hover ? sf::Color(82,82,102) : sf::Color(55,55,70));
-    shape.setOutlineThickness(1.f);
-    shape.setOutlineColor(sf::Color(115, 115, 140));
+    shape.setFillColor(hover ? sf::Color(255,219,231) : sf::Color(255,183,206));
+    shape.setOutlineThickness(1.2f);
+    shape.setOutlineColor(sf::Color(8,8,8));
     win.draw(shape);
 
-    sf::Text txt(font, (open ? "v  " : ">  ")+label,13);
-    txt.setFillColor(sf::Color(205, 205, 235));
+    sf::Text txt(font, (open ? "v  " : ">  ")+label,16);
+    txt.setFillColor(sf::Color(120,0,59));
     txt.setPosition({x+10.f,y+11.f});
     win.draw(txt);
     return hover;
@@ -106,8 +110,8 @@ float Menu::drawSlider(sf::RenderWindow& win, sf::Font& font, const std::string&
     double displayVal=minA+(val/100.f)*(maxA-minA);
 
     /// display of the value
-    sf::Text lbl(font,label+": "+std::to_string(static_cast<int>(val)),11);
-    lbl.setFillColor(sf::Color(185, 185, 185));
+    sf::Text lbl(font,label+": "+std::to_string(static_cast<int>(val)),16);
+    lbl.setFillColor(sf::Color(255, 255, 255));
     lbl.setPosition({x, y});
     win.draw(lbl);
     /// slider track
@@ -120,7 +124,7 @@ float Menu::drawSlider(sf::RenderWindow& win, sf::Font& font, const std::string&
 
     sf::RectangleShape fill({(val/100.f)*trackW, 4.f});
     fill.setPosition({x, ty+6.f});
-    fill.setFillColor(sf::Color(85, 135, 205));
+    fill.setFillColor(sf::Color(255,215,55));
     win.draw(fill);
 
     sf::CircleShape knob(7.f);
@@ -147,33 +151,33 @@ void Menu::drawModal(sf::RenderWindow& win,sf::Font& font) {
     overlay.setFillColor(sf::Color(0,0,0,165));
     win.draw(overlay);
     /// rectangle with options
-    sf::RectangleShape box({500.f, 140.f});
-    box.setPosition({350.f, 310.f});
-    box.setFillColor(sf::Color(43,43,56));
+    sf::RectangleShape box({800.f, 340.f});
+    box.setPosition({240.f, 190.f});
+    box.setFillColor(sf::Color(120,0,59));
     box.setOutlineThickness(2.f);
-    box.setOutlineColor(sf::Color(125,135,195));
+    box.setOutlineColor(sf::Color(255,255,255));
     win.draw(box);
 
-    sf::Text title(font, isTypingLoad ? "Load Image - Enter file path:" : "Save Image - Enter file path:", 14);
-    title.setFillColor(sf::Color(185,205,250));
-    title.setPosition({360.f,320.f});
+    sf::Text title(font, isTypingLoad ? "Load Image - Enter file path:" : "Save Image - Enter file path:", 20);
+    title.setFillColor(sf::Color(255,255,255));
+    title.setPosition({270.f,220.f});
     win.draw(title);
     /// input field
-    sf::RectangleShape field({460.f,30.f});
-    field.setPosition({370.f,348.f});
-    field.setFillColor(sf::Color(22,22,32));
+    sf::RectangleShape field({700.f,50.f});
+    field.setPosition({300.f,288.f});
+    field.setFillColor(sf::Color(8,8,8));
     field.setOutlineThickness(1.f);
-    field.setOutlineColor(sf::Color(85,125,210));
+    field.setOutlineColor(sf::Color(255,255,255));
     win.draw(field);
 
-    sf::Text inp(font,typedPath+"|",13);
+    sf::Text inp(font,typedPath+"|",20);
     inp.setFillColor(sf::Color::White);
-    inp.setPosition({376.f,354.f});
+    inp.setPosition({303.f,290.f});
     win.draw(inp);
 
-    sf::Text hint(font, "ENTER = continue    ESC = cancel", 11);
-    hint.setFillColor(sf::Color(120,120,120));
-    hint.setPosition({370.f, 392.f});
+    sf::Text hint(font, "ENTER = continue    ESC = cancel", 17);
+    hint.setFillColor(sf::Color(255,255,255));
+    hint.setPosition({303.f, 350.f});
     win.draw(hint);
 }
 
@@ -184,73 +188,73 @@ void Menu::drawCropModal(sf::RenderWindow& win,sf::Font& font) {
     overlay.setFillColor(sf::Color(0,0,0,165));
     win.draw(overlay);
 
-    sf::RectangleShape box({500.f,160.f});
-    box.setPosition({350.f,300.f});
-    box.setFillColor(sf::Color(43,43,56));
+    sf::RectangleShape box({800.f, 340.f});
+    box.setPosition({240.f, 190.f});
+    box.setFillColor(sf::Color(120,0,59));
     box.setOutlineThickness(2.f);
-    box.setOutlineColor(sf::Color(125,135,195));
+    box.setOutlineColor(sf::Color(255,255,255));
     win.draw(box);
 
-    sf::Text title(font, "Crop Image - Enter dimensions:",14);
-    title.setFillColor(sf::Color(185,205,250));
-    title.setPosition({360.f,310.f});
+    sf::Text title(font, "Crop Image - Enter dimensions:",20);
+    title.setFillColor(sf::Color(255,255,255));
+    title.setPosition({270.f,220.f});
     win.draw(title);
 
     /// width label
-    sf::Text lblW(font,"Width:",11);
+    sf::Text lblW(font,"Width:",16);
     lblW.setFillColor(sf::Color(185,185,185));
-    lblW.setPosition({370.f,330.f});
+    lblW.setPosition({300.f,250.f});
     win.draw(lblW);
 
-    sf::RectangleShape fieldW({200.f,30.f});
-    fieldW.setPosition({370.f,345.f});
+    sf::RectangleShape fieldW({200.f,35.f});
+    fieldW.setPosition({300.f,288.f});
     fieldW.setFillColor(sf::Color(22,22,32));
     fieldW.setOutlineThickness(1.f);
-    fieldW.setOutlineColor(cropActiveField == 0 ? sf::Color(85,125,210) : sf::Color(70,70,70));
+    fieldW.setOutlineColor(cropActiveField == 0 ? sf::Color(255,255,255) : sf::Color(70,70,70));
     win.draw(fieldW);
     /// we use "|" to show that the input filed is active
     sf::Text inpW(font,cropWidthStr + (cropActiveField == 0 ? "|" : ""), 13);
     inpW.setFillColor(sf::Color::White);
-    inpW.setPosition({376.f,351.f});
+    inpW.setPosition({310.f,295.f});
     win.draw(inpW);
 
     /// height label
-    sf::Text lblH(font,"Height:",11);
+    sf::Text lblH(font,"Height:",16);
     lblH.setFillColor(sf::Color(185,185,185));
-    lblH.setPosition({610.f,330.f});
+    lblH.setPosition({550.f,250.f});
     win.draw(lblH);
 
-    sf::RectangleShape fieldH({200.f,30.f});
-    fieldH.setPosition({610.f,345.f});
+    sf::RectangleShape fieldH({200.f,35.f});
+    fieldH.setPosition({550.f,288.f});
     fieldH.setFillColor(sf::Color(22,22,32));
     fieldH.setOutlineThickness(1.f);
-    fieldH.setOutlineColor(cropActiveField == 1 ? sf::Color(85,125,210) : sf::Color(70,70,70));
+    fieldH.setOutlineColor(cropActiveField == 1 ? sf::Color(255,255,255) : sf::Color(70,70,70));
     win.draw(fieldH);
 
     sf::Text inpH(font, cropHeightStr + (cropActiveField == 1 ? "|" : ""), 13);
     inpH.setFillColor(sf::Color::White);
-    inpH.setPosition({616.f,351.f});
+    inpH.setPosition({560.f,295.f});
     win.draw(inpH);
 
     /// we show original dimenions so the user knows to introduce smaller ones
     if (!gallery.empty()) {
-        std::string dimInfo = "Original: " +
-            std::to_string(gallery[selectedIndex].getWidth()) + " x " +
+        std::string dimInfo = "Original: "+
+            std::to_string(gallery[selectedIndex].getWidth())+" x "+
             std::to_string(gallery[selectedIndex].getHeight());
-        sf::Text dims(font, dimInfo, 11);
-        dims.setFillColor(sf::Color(140,140,140));
-        dims.setPosition({370.f, 385.f});
+        sf::Text dims(font,dimInfo,16);
+        dims.setFillColor(sf::Color(255,255,255));
+        dims.setPosition({310.f,385.f});
         win.draw(dims);
     }
 
-    sf::Text hint(font, "ENTER = preview   ESC = anuleaza",10);
-    hint.setFillColor(sf::Color(120,120,120));
-    hint.setPosition({360.f,408.f});
+    sf::Text hint(font, "ENTER = continue    ESC = cancel", 17);
+    hint.setFillColor(sf::Color(255,255,255));
+    hint.setPosition({303.f, 350.f});
     win.draw(hint);
 }
 
 void Menu::run() {
-    /// main window with 1280x720 resolution
+    /// main window with 1200x760 resolution
     sf::RenderWindow window(sf::VideoMode({1200,760}), "Photo Editor");
     window.setFramerateLimit(60);
     /// loading font downloaded in the project folder
@@ -264,7 +268,6 @@ void Menu::run() {
     sf::Sprite mainSpr(mainTex);
     bool needsUpdate=true;
 
-    // ── Layout constants ───────────────────────────────────────────────────
     const float TOP_H=55.f;
     const float PANEL_X=855.f;
     const float HDR_W=340.f;
@@ -283,7 +286,7 @@ void Menu::run() {
         ///color filters section
         colorHdrY=ry; 
         ry +=40.f; /// header space 
-        if (showColor) {
+        if (showColor) {ry+=4.f;
             for (int i=0;i<6;++i) { 
                 cbY[i]=ry;
                 ry+=34.f; } ///space for weach button
@@ -292,7 +295,7 @@ void Menu::run() {
         /// detail filters section
         detailHdrY=ry;
          ry+=40.f;
-        if (showDetail) {
+        if (showDetail) {ry+=4.f;
             dcY=ry; ry+=42.f;
             dgY=ry; ry+=42.f;
             dbY=ry; ry+=46.f;
@@ -300,7 +303,7 @@ void Menu::run() {
         /// size filters section
         sizeHdrY=ry;
          ry+=40.f;
-        if (showSize) {
+        if (showSize) {ry+=4.f;
             rsY=ry; ry+=42.f;
             cropBtnY=ry; ry+=38.f;
             ry+=4.f;
@@ -308,10 +311,11 @@ void Menu::run() {
         /// presets section
         presetsHdrY=ry;
         ry+=40.f;
-        if (showPresets)
+        if (showPresets){ry+=4.f;
             for (int i=0;i<6;++i)
             {pbY[i]=ry;
             ry+=34.f; }
+        ry+=4.f;}
     };
 
     /// main loop
@@ -328,9 +332,10 @@ void Menu::run() {
                 if (const auto* mb2=ev->getIf<sf::Event::MouseButtonPressed>()) {
                     ///we check if the user pressed on width(left) or height(right)
                     sf::Vector2f m2{static_cast<float>(mb2->position.x),static_cast<float>(mb2->position.y)};
-                    if (sf::FloatRect({370.f,345.f},{200.f,30.f}).contains(m2)) cropActiveField = 0;
-                    if (sf::FloatRect({610.f,345.f},{200.f,30.f}).contains(m2)) cropActiveField = 1;
-                }
+                   
+                cropActiveField=sf::FloatRect({300.f,288.f},{200.f,35.f}).contains(m2) ? 0:
+                                sf::FloatRect({550.f,288.f},{200.f,35.f}).contains(m2) ? 1:
+                                    cropActiveField;}
                 ///now we check if the user pressed escape, enter or backspace
                 if (const auto* k=ev->getIf<sf::Event::KeyPressed>()) {
                     if (k->code==sf::Keyboard::Key::Escape) {
@@ -416,32 +421,21 @@ void Menu::run() {
                     return sf::FloatRect({x,12.f}, {w,32.f}).contains(m); 
                 };
                 /// load button
-                if (topHit(10.f, 80.f))  
+                if (topHit(10.f, 150.f))  
                 { isTypingLoad=true; 
                     typedPath=""; }
                 /// save button
-                if (topHit(100.f,80.f))  
+                if (topHit(180.f,150.f))  
                 { isTypingSave=true;
                 typedPath=gallery.empty() ? "" : gallery[selectedIndex].getFilename(); }
                 /// gallery button
-                if (topHit(190.f,100.f)) 
+                if (topHit(350.f,150.f)) 
                 { showGallery=!showGallery; }
-                /// undo button
-                if (topHit(305.f, 75.f)) 
-                { cmdManager.undo();
-                isPreviewActive=false; 
-                needsUpdate=true; }
-                /// reset button
-                if (topHit(390.f, 75.f)&&!gallery.empty()) {
-                    cmdManager.executeCommand(std::make_unique<Reset>(gallery[selectedIndex]));
-                    isPreviewActive=false; 
-                    needsUpdate=true;
-                }
-
+          
                /// apply/cancel area available only in preview mode
                 if (isPreviewActive) {
                     /// apply button 
-                    if (sf::FloatRect({292.f,694.f},{113.f,34.f}).contains(m)) {
+                    if (sf::FloatRect({700.f,12.f},{113.f,34.f}).contains(m)) {
                         try {
                             std::unique_ptr<ImageEditor> f;
                             /// each case from filter factory
@@ -463,7 +457,7 @@ void Menu::run() {
                         isPreviewActive=false; needsUpdate=true;
                     }
                     /// cancel button
-                    if (sf::FloatRect({415.f,694.f},{113.f,34.f}).contains(m))
+                    if (sf::FloatRect({825.f,12.f},{113.f,34.f}).contains(m))
                         { isPreviewActive=false;
                         needsUpdate=true; }
                 }
@@ -562,6 +556,7 @@ void Menu::run() {
                             activeAmount=amt;
                             isPreviewActive=true; 
                             needsUpdate=true;
+                            
                         } catch (const std::exception& e)
                          { std::cerr<<e.what()<<"\n"; }
                     }
@@ -620,15 +615,15 @@ void Menu::run() {
        /// canvas for photo
         sf::RectangleShape canvasBg({static_cast<float>(CANVAS.x), static_cast<float>(CANVAS.y)});
         canvasBg.setPosition(CANVAS_ORIG);
-        canvasBg.setFillColor(sf::Color(33,33,38));
+        canvasBg.setFillColor(sf::Color(8,8,8));
         window.draw(canvasBg);
         /// if the gallery is not empty we display the current photo
         if (!gallery.empty()) {
             window.draw(mainSpr);
         } else {
             /// if the gallery is empty we display this text
-            sf::Text hint(font,"Press LOAD to open an image",17);
-            hint.setFillColor(sf::Color(88,88,98));
+            sf::Text hint(font,"Press LOAD to open an image",25);
+            hint.setFillColor(sf::Color(255,183,206));
             hint.setOrigin(hint.getLocalBounds().getCenter());
             hint.setPosition({static_cast<float>(CANVAS.x)/2.f,TOP_H+static_cast<float>(CANVAS.y)/2.f});
             window.draw(hint);
@@ -637,7 +632,7 @@ void Menu::run() {
         /// right pannel with filters
         sf::RectangleShape panel({350.f,760.f});
         panel.setPosition({PANEL_X-5.f,0.f});
-        panel.setFillColor(sf::Color(34,34,41));
+        panel.setFillColor(sf::Color(120,0,59));
         panel.setOutlineThickness(1.f);
         panel.setOutlineColor(sf::Color(52,52,62));
         window.draw(panel);
@@ -651,8 +646,8 @@ void Menu::run() {
         drawHeader(window, font,"COLOR FILTERS",PANEL_X,colorHdrY,showColor,HDR_W);
         if (showColor) {
             struct { const char* lbl; sf::Color col; } 
-            cb[] = {{"Black & White",{58,58,58}},{"Golden Hour",{98,70,18}},{"Orange & Teal",{28,82,82}},
-            {"Retro",{83,58,28}},{"Pastels",{88,52,88}},{"Moody Blues",{28,48,98}}};
+            cb[] = {{"Black & White",{255,189,0}},{"Golden Hour",{255,189,0}},{"Orange & Teal",{255,189,0}},
+            {"Retro",{255,189,0}},{"Pastels",{255,189,0}},{"Moody Blues",{255,189,0}}};
             for (int i=0;i<6;++i)
                 drawButton(window,font,cb[i].lbl,PANEL_X+5.f,cbY[i],cb[i].col,BTN_W,BTN_H);
         }
@@ -661,29 +656,29 @@ void Menu::run() {
         drawHeader(window,font,"DETAIL FILTERS",PANEL_X,detailHdrY,showDetail,HDR_W);
         if (showDetail) {
             contrastSlider=drawSlider(window,font,"Contrast",PANEL_X+5.f,dcY,contrastSlider,SLD_W,0.0,100.0);
-            drawButton(window,font,"Preview",PANEL_X+250.f,dcY+1.f,{44,63,83},85.f,22.f);
+            drawButton(window,font,"Preview",PANEL_X+250.f,dcY+1.f,{255,189,0},85.f,22.f);
 
             grainSlider=drawSlider(window,font,"Grain", PANEL_X+5.f,dgY,grainSlider,SLD_W,0.0,100.0);
-            drawButton(window,font,"Preview",PANEL_X+250.f,dgY+1.f,{44,63,83},85.f,22.f);
+            drawButton(window,font,"Preview",PANEL_X+250.f,dgY+1.f,{255,189,0},85.f,22.f);
 
             blurSlider=drawSlider(window,font,"Blur",PANEL_X+5.f,dbY,blurSlider,SLD_W,0.0,100.0);
-            drawButton(window,font,"Preview",PANEL_X+250.f,dbY+1.f,{44,63,83},85.f,22.f);
+            drawButton(window,font,"Preview",PANEL_X+250.f,dbY+1.f,{255,189,0},85.f,22.f);
         }
 
        /// size filters
         drawHeader(window,font,"SIZE FILTERS",PANEL_X,sizeHdrY,showSize,HDR_W);
         if (showSize) {
             resizeSlider=drawSlider(window,font,"Resize %",PANEL_X+5.f,rsY,resizeSlider,SLD_W,0.0,100.0);
-            drawButton(window,font,"Preview",PANEL_X+250.f,rsY+1.f,{44,63,83},85.f,22.f);
-            drawButton(window,font,"Crop",PANEL_X+5.f,cropBtnY,{65,45,75},BTN_W,BTN_H);
+            drawButton(window,font,"Preview",PANEL_X+250.f,rsY+1.f,{255,189,0},85.f,22.f);
+            drawButton(window,font,"Crop",PANEL_X+5.f,cropBtnY,{255,189,0},BTN_W,BTN_H);
         }
 
         /// presets
         drawHeader(window,font,"PRESETS",PANEL_X,presetsHdrY,showPresets,HDR_W);
         if (showPresets) {
             struct { const char* lbl; sf::Color col;} 
-            pb[]={{"Vintage",{70,50,28}},{"Cinematic",{28,58,70}},{"Summer",{93,70,18}},{"Spring",{48,83,48}},
-                {"Winter",{38,58,93}},{"Autumn",{93,50,18}}};
+            pb[]={{"Vintage",{255,189,0}},{"Cinematic",{255,189,0}},{"Summer",{255,189,0}},{"Spring",{255,189,0}},
+                {"Winter",{255,189,0}},{"Autumn",{255,189,0}}};
             for (int i=0;i<6;++i)
                 drawButton(window,font,pb[i].lbl,PANEL_X+5.f,pbY[i],pb[i].col,BTN_W,BTN_H);
         }
@@ -691,54 +686,50 @@ void Menu::run() {
         /// bottom bar
         sf::RectangleShape botBar({350.f,44.f});
         botBar.setPosition({PANEL_X-5.f,716.f});
-        botBar.setFillColor(sf::Color(24,24,30));
+        botBar.setFillColor(sf::Color(255,183,206));
         window.draw(botBar);
-        drawButton(window,font,"COPY",PANEL_X+5.f,718.f,{48,68,78},78.f,30.f);
-        drawButton(window,font,"PASTE",PANEL_X+90.f,718.f,{48,78,68},78.f,30.f);
-        drawButton(window,font,"UNDO", PANEL_X+175.f,718.f,{93,38,38},78.f,30.f);
-        drawButton(window,font,"RESET",PANEL_X+260.f,718.f,{58,58,58},75.f,30.f);
+        drawButton(window,font,"COPY",PANEL_X+5.f,722.f,{8,8,8},78.f,30.f);
+        drawButton(window,font,"PASTE",PANEL_X+90.f,722.f,{8,8,8},78.f,30.f);
+        drawButton(window,font,"UNDO", PANEL_X+175.f,722.f,{8,8,8},78.f,30.f);
+        drawButton(window,font,"RESET",PANEL_X+260.f,722.f,{8,8,8},75.f,30.f);
 
         /// top bar
         sf::RectangleShape topBar({1200.f,TOP_H});
-        topBar.setFillColor(sf::Color(21,21,27));
+        topBar.setFillColor(sf::Color(255,183,206));
         topBar.setPosition({0.f,0.f});
         window.draw(topBar);
         /// top bar buttons
-        drawButton(window,font,"LOAD",10.f,12.f,{52,72,98},80.f,32.f);
-        drawButton(window,font,"SAVE",100.f,12.f,{38,78,48},80.f,32.f);
-        drawButton(window,font,"GALLERY",190.f,12.f,{72,52,82},100.f,32.f);
-        drawButton(window,font,"UNDO",305.f,12.f,{93,38,38},75.f,32.f);
-        drawButton(window,font,"RESET",390.f,12.f,{58,58,58},75.f,32.f);
+        drawButton(window,font,"LOAD",10.f,12.f,{8,8,8},150.f,36.f);
+        drawButton(window,font,"SAVE",180.f,12.f,{8,8,8},150.f,36.f);
+        drawButton(window,font,"GALLERY",350.f,12.f,{8,8,8},150.f,36.f);
         /// app title
-        sf::Text appName(font,"PhotoEditor",15);
-        appName.setFillColor(sf::Color(155,155,180));
-        appName.setPosition({680.f,18.f});
+        sf::Text appName(font,"PhotoEditor",25);
+        appName.setFillColor(sf::Color(120,0,59));
+        appName.setPosition({1050.f,12.f});
         window.draw(appName);
 
         /// 
         if (isPreviewActive) {
             /// preview mode
-            sf::RectangleShape badge({145.f,24.f});
-            badge.setPosition({525.f,16.f});
-            badge.setFillColor(sf::Color(115,85,15));
+            sf::RectangleShape badge({150.f,36.f});
+            badge.setPosition({525.f,12.f});
+            badge.setFillColor(sf::Color(255,189,0));
+            badge.setOutlineThickness(1.3f);
+            badge.setOutlineColor(sf::Color(255,255,255));
             window.draw(badge);
-            sf::Text bdgTxt(font,"PREVIEW MODE",12);
-            bdgTxt.setFillColor(sf::Color(255,215,55));
+            sf::Text bdgTxt(font,"PREVIEW MODE",18);
+            bdgTxt.setFillColor(sf::Color(255,255,255));
             bdgTxt.setOrigin(bdgTxt.getLocalBounds().getCenter());
-            bdgTxt.setPosition({597.f,28.f});
+            bdgTxt.setPosition({605.f,28.f});
             window.draw(bdgTxt);
 
-            sf::RectangleShape applyBg({254.f,46.f});
-            applyBg.setPosition({285.f,688.f});
-            applyBg.setFillColor(sf::Color(0,0,0,160));
-            window.draw(applyBg);
-            drawButton(window,font,"APPLY",292.f,694.f,{28,98,38}, 113.f,34.f);
-            drawButton(window,font,"CANCEL",415.f,694.f,{108,28,28},113.f,34.f);
+            drawButton(window,font,"APPLY",700.f,12.f,{28,98,38},113.f,34.f);
+            drawButton(window,font,"CANCEL",825.f,12.f,{108,28,28},113.f,34.f);
         }
 
         /// gallery
         if (showGallery&&!gallery.empty()) {
-            sf::RectangleShape gallBg({855.f,82.f});
+            sf::RectangleShape gallBg({850.f,82.f});
             gallBg.setPosition({0.f,660.f});
             gallBg.setFillColor(sf::Color(18,18,23,220));
             window.draw(gallBg);
@@ -747,9 +738,9 @@ void Menu::run() {
                 bool sel=(i==selectedIndex);
                 sf::RectangleShape thumb({90.f,70.f});
                 thumb.setPosition({10.f+i*100.f,663.f});
-                thumb.setFillColor(sf::Color(52,52,62));
+                thumb.setFillColor(sf::Color(120,0,59));
                 thumb.setOutlineThickness(sel?2.f:1.f);
-                thumb.setOutlineColor(sel?sf::Color(85,135,215):sf::Color(72,72,82));
+                thumb.setOutlineColor(sel?sf::Color(120,0,59):sf::Color(255,255,255));
                 window.draw(thumb);
                 /// image name max 11 characters
                 std::string fn=gallery[i].getFilename();
@@ -759,8 +750,8 @@ void Menu::run() {
                 if (fn.size()>11) 
                     fn=fn.substr(0,10) + "...";
                 /// centers text
-                sf::Text fnTxt(font,fn,9);
-                fnTxt.setFillColor(sf::Color(175,175,175));
+                sf::Text fnTxt(font,fn,11);
+                fnTxt.setFillColor(sf::Color(255,255,255));
                 fnTxt.setOrigin(fnTxt.getLocalBounds().getCenter());
                 fnTxt.setPosition({10.f+i*100.f+45.f, 727.f});
                 window.draw(fnTxt);
