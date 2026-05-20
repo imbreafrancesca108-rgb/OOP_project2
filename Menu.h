@@ -28,7 +28,7 @@ class Menu : public Observer<Image> {
     float blurSlider=0;
     float resizeSlider=0;
 
-    /// booleans to show if an accordion is opened or not
+    /// booleans to show if an accordion/setting is opened or not
     bool showColor=false;
     bool showDetail=false;
     bool showPresets=false;
