@@ -77,7 +77,7 @@ void Resize::applySettings(Image& img){
     }
 
     ///replace image with its resized version
-    img.getPixels().assign(modifiedPixels.begin(), modifiedPixels.end());
+    img.getPixels()=modifiedPixels;
     img.setWidth(nw);
     img.setHeight(nh);
     }
