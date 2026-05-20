@@ -101,7 +101,7 @@ Notifies multiple observers on any changes made to the observable object (Image)
 
 ## **3.Technical Implementation**
 All classes are split into .h and .cpp files.
-**Diamond inheritance**: presets inherit form both 'ColorFilters' and 'DetailFilters' using **virtual public**.
+#### **Diamond inheritance**: presets inherit form both 'ColorFilters' and 'DetailFilters' using **virtual public**.
 
 #### SFML Graphical Interface & Rendering Logic
 
