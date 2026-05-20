@@ -151,7 +151,7 @@ Vector manages memory automatically (no manual new/delete)
 ImageEditor is an abstract class with pure virtual methods and many virtual functions throughout the programme which allow the system to treat different filter objects (BlackAndWhite, Contrast, Blur, etc.) uniformly through the same interface while they maintain their unique behaviors. 
 
 ## **4.Workflow**
-When you run the application, the system opens the graphic interface created and waits for the user input. 
+When you run the application, the system opens the graphic interface created and waits for the user input. There is a text displayed which indicates that the user should upload an image. The top bar display 3 buttons: load, save and galerry. After loading an image, the user can use to apply any filter that is displayed in the right panne, in 4 accordion section: color, detail, size and presets. Every filter can be previewed and there will be two buttons appearing in the top bar which tell the user to either apply the modifications or cancel the action. The bottom bar consists of 4 buttons: copy, paste, undo and reset. You can also press the gallery button and select which photo you want to edit from the ones uploaded in the application. Crop and load/save options activate a small pop-up window for the user to input his/hers data. 
 
 
 ## **5.Additional mentions**
@@ -161,3 +161,17 @@ When you run the application, the system opens the graphic interface created and
 **- stb_image_write.h** - Image saving (JPG, PNG, BMP, TGA)
 
 **- SFML 3.0** - UI elements
+
+#### Compile & build instructions
+This project uses SFML for graphics. To compile and run the application, you need to have the SFML development libraries installed.
+
+Since this project was built using the MSYS2/MinGW environment, the easiest way to satisfy dependencies is via pacman:
+
+**-Install SFML**: Open your MSYS2 terminal (typically UCRT64) and run:
+pacman -S mingw-w64-ucrt-x86_64-sfml
+
+**-Compile**: Use the following command to link the required SFML modules:
+g++ *.cpp -o App -lsfml-graphics -lsfml-window -lsfml-system
+
+**-Run**: Execute the generated binary:
+./App.exe
