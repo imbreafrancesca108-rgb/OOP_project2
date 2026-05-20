@@ -72,7 +72,7 @@ Defines 6 custom exceptions derived from std::runtime_error:
 
 **Design patterns**
 
-### **I.Command Pattern **
+### **I.Command Pattern**
 Encapsulates all image processing actions as objects and provides a history tracking:
 
 - **Command**: interface; defines the 2 methods each action has: execute and undo
@@ -82,17 +82,17 @@ Encapsulates all image processing actions as objects and provides a history trac
 - **Paste**: using FilterSettings, it transfers the coppied information to the selected picture
 - **CommandManager**: acts as a history tracker, managing the execution and reversal of the commands
 
-### **II.State Pattern **
+### **II.State Pattern**
 Manages the behavioral flow of the application depending on its current state:
 
 -**State**: interface; declares the 2 methods each behaviour has: interaction with the user and preview cleanup
 -**InitialState**: default mode with no operations
 -**Preview**: state that maintains a backup of the image data and allows the user to see or clear the preview for the selected settings
 
-### **III.Factory Pattern **
+### **III.Factory Pattern**
 Centralizes the creation logic for filters and provides static methods to generate a specific filter based on input parameters. There are 3 categories, split in : no-parameter filters (color & presets), one-parameter filters (detail & resize) and two-parameter filters ( crop ), while also taking into consideration the exceptions defined.
 
-### **III.Observer Pattern **
+### **III.Observer Pattern**
 Notifies multiple observers on any changes made to the observable object (Image). It ensures that whenever an image is altered , the user interface is automatically updated to reflect that modifications.
 
 -**Observer**: template interface which provides an update method 
