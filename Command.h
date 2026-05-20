@@ -10,7 +10,7 @@
 
 /// COMMAND DESIGN PATTERN
 /// turns a request or action into an object
-/// abstract class/ interface fro commands
+/// abstract class/ interface for commands
 class Command{
     public:
     virtual ~Command()=default;
