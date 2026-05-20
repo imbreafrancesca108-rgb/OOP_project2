@@ -11,7 +11,6 @@ std::string Contrast::getFilterName() const {
     return "This filter changes the contrast!";}
 
 ///adjust contrast using standard formula new_pixel = amount * (pixel - 128) + 128
-///amount>1 -> increase contrast ; amount<1 -> decrease contrast
 void Contrast::applySettings(Image& img) {
     std::vector<unsigned char>& pixels=img.getPixels();
     int channels=img.getRGBChannels();
@@ -62,7 +61,7 @@ void Grain::applySettings(Image& img) {
 
         ///grain gets added proportionally with brightness
         ///dark areas get less and bright ones more
-        double new_pixel=pixel+(noise*(255.0-pixel)*amountGrain);
+        double new_pixel=pixel+(noise*(255.0-pixel)*(amountGrain/10.0));
 
         if(new_pixel>255.0f)
             new_pixel=255.0f;
@@ -93,7 +92,7 @@ void Blur::applySettings(Image& img) {
     int w=img.getWidth();
     int h=img.getHeight();
 
-    if(amountBlur <= 0 || amountBlur > 1) {
+    if(amountBlur <= 0 || amountBlur > 20) {
         throw AmountException();
     }
 
@@ -113,7 +112,7 @@ void Blur::applySettings(Image& img) {
                 }
                 int modified=(i*w+j)*channels+c;
                 ///blend original with blur
-                modifiedPixels[modified]=(unsigned char)(originalPixels[modified]+amountBlur*(sum/25.0-originalPixels[modified]));
+                modifiedPixels[modified]=(unsigned char)(originalPixels[modified]+(amountBlur/20.0)*(sum/25.0-originalPixels[modified]));
             }
     ///copy results
     img.getPixels()=modifiedPixels;
