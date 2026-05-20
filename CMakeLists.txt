@@ -14,19 +14,15 @@ else()
     set(WARNINGS_AS_ERRORS ON)
 endif()
 
-# ── DETECTARE MODERNA SFML (v2 sau v3) ───────────────────────────────────────
-# Toate versiunile acceptă componentele scrise cu litere mici
 find_package(SFML COMPONENTS graphics window system REQUIRED)
 
-# Verificăm dacă s-au generat țintele moderne de SFML 3 (SFML::graphics)
 if(TARGET SFML::graphics)
-    message("S-a detectat SFML 3 (Sintaxa moderna cu namespace)")
+    message("SFML 3")
     set(SFML_LIBRARIES SFML::graphics SFML::window SFML::system)
 elseif(TARGET sfml-graphics)
-    message("S-a detectat SFML 2 (Tinte clasice)")
+    message("SFML 2 ")
     set(SFML_LIBRARIES sfml-graphics sfml-window sfml-system)
 else()
-    # Fallback pentru unele variante de instalare vechi
     set(SFML_LIBRARIES ${SFML_LIBRARIES}) 
 endif()
 
