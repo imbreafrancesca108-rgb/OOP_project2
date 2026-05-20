@@ -19,7 +19,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # ── LINUX CONFIG ──────────────────────────────────────────────────────────
     - name: Install Linux Dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -40,8 +39,7 @@ jobs:
         git clone --depth 1 --branch 3.0.0 https://github.com/SFML/SFML.git
         cmake -S SFML -B SFML/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./sfml3_install -DSFML_BUILD_AUDIO=ON -DSFML_BUILD_GRAPHICS=ON -DSFML_BUILD_WINDOW=ON -DSFML_BUILD_SYSTEM=ON
         cmake --build SFML/build --target install --parallel $(nproc)
-
-    # ── WINDOWS CONFIG (Aliniat pe MINGW64) ───────────────────────────────────
+        
     - name: Set up MSYS2 (Windows)
       if: matrix.os == 'windows-latest'
       uses: msys2/setup-msys2@v2
@@ -54,7 +52,6 @@ jobs:
           mingw-w64-x86_64-toolchain
           mingw-w64-x86_64-sfml
 
-    # ── BUILD STEPS ──────────────────────────────────────────────────────────
     - name: Configure CMake (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="${{ github.workspace }}/sfml3_install" -DCMAKE_CXX_COMPILER=g++-13
