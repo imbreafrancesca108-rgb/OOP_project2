@@ -25,15 +25,20 @@ class InitialState: public State{
 /// preview mode 
 class Preview: public State{
     std::vector<unsigned char> backup;
+    int backupW, backupH;
     public:
     Preview(Image& img)
     {
         backup=img.getPixels();
+        backupW=img.getWidth();
+        backupH=img.getHeight();
     }
     void mouseClick() override{
         std::cout<<"Previewing image.\n";
     }
     void clearPreview(Image& img) override{
+        img.setWidth(backupW);
+        img.setHeight(backupH);
         img.getPixels()=backup;
     }
 
@@ -42,7 +47,8 @@ class Preview: public State{
     /// it would be redundant to write 20 functions (one for each filter)
     template<typename Filter>
     void showPreview(Image& img, Filter& filter)
-    {
+    {   img.setWidth(backupW);
+        img.setHeight(backupH);
         img.getPixels()=backup;
         filter.applySettings(img);
     }
